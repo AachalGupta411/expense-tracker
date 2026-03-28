@@ -5,6 +5,8 @@ from sqlalchemy import text
 
 from app.config import settings
 from app.database import get_db
+from app.routes.auth import router as auth_router
+
 
 app = FastAPI(
     title="Expense Tracker API",
@@ -21,7 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Health check (DB connected)
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
     return {"status": "ok", "database": "connected"}
+
+# Include auth routes
+app.include_router(auth_router)
