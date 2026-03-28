@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
 from app.config import settings
+from app.database import get_db
 
 app = FastAPI(
     title="Expense Tracker API",
@@ -18,6 +22,6 @@ app.add_middleware(
 )
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "version": "1.0.0"}
-
+def health_check(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    return {"status": "ok", "database": "connected"}
