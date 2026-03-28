@@ -1,21 +1,21 @@
-import { useEffect } from 'react'
-import api from '../services/api'
+import { useGoogleAuth } from '../hooks/useGoogleAuth'
 
 export default function Landing() {
-  useEffect(() => {
-    api.get('/health')
-      .then(res => {
-        console.log('API WORKING:', res.data)
-      })
-      .catch(err => {
-        console.error('API ERROR:', err)
-      })
-  }, [])
+  function handleGoogleSuccess(idToken) {
+    console.log('ID TOKEN:', idToken)
+  }
+
+  const { buttonRef, isGoogleLoaded } = useGoogleAuth(handleGoogleSuccess)
 
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Expense Tracker</h1>
-      <p>Check console for API response</p>
+
+      {isGoogleLoaded ? (
+        <div ref={buttonRef}></div>
+      ) : (
+        <p>Loading sign-in...</p>
+      )}
     </div>
   )
 }
