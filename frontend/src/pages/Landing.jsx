@@ -1,24 +1,26 @@
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
+import { useAuth } from '../hooks/useAuth'
+import api from '../services/api'
 
 export default function Landing() {
+  const { login } = useAuth()  // ✅ USE THIS
 
   const handleLogin = async (id_token) => {
     try {
       console.log('ID TOKEN:', id_token)
 
-      const res = await fetch('http://localhost:8001/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id_token }),
+      // ✅ use axios (api) instead of fetch
+      const res = await api.post('/auth/google', {
+        id_token,
       })
 
-      const data = await res.json()
+      const { access_token, user } = res.data
 
-      console.log('JWT:', data.access_token)
+      console.log('JWT:', access_token)
+      console.log('USER:', user)
 
-      localStorage.setItem('token', data.access_token)
+      // ✅ THIS IS THE KEY CHANGE
+      login(access_token, user)
 
     } catch (err) {
       console.error('Login failed:', err)

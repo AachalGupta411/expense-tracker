@@ -47,10 +47,17 @@ async def google_login(
     # 4. Create JWT
     token = create_access_token({"sub": str(user.id)})
 
-    # 5. Return token
-    return {"access_token": token}
-
-
+    # 5. Return token + user
+    return {
+        "access_token": token,
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "name": user.name,
+            "picture": user.picture,
+        }
+}
+   
 # 👤 Get current user
 @router.get("/me")
 def get_me(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
