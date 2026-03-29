@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     DATABASE_URL: str
 
@@ -16,4 +17,15 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-settings = Settings() 
+    def cors_origins(self) -> list[str]:
+        """Browser may use localhost or 127.0.0.1; both must be allowed or requests look like 'network errors'."""
+        primary = self.FRONTEND_URL.strip().rstrip("/")
+        pool = [
+            primary,
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+        return list(dict.fromkeys(pool))
+
+
+settings = Settings()

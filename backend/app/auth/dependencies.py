@@ -1,8 +1,10 @@
+from uuid import UUID
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.auth.jwt import verify_token
+from app.auth.jwt import decode_access_token
 from app.database import get_db
 from app.models.user import User
 
@@ -16,14 +18,19 @@ def get_current_user(
     token = credentials.credentials
 
     # 1. Verify JWT
-    payload = verify_token(token)
+    payload = decode_access_token(token)
 
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
+    try:
+        uid = UUID(str(user_id))
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid user ID in token")
+
     # 2. Fetch user from DB
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == uid).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

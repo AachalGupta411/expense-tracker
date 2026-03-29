@@ -1,10 +1,18 @@
 import axios from 'axios'
 
+function resolveBaseURL() {
+  const fromEnv = import.meta.env.VITE_API_URL?.trim()
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, '')
+  }
+  return 'http://localhost:8000'
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: resolveBaseURL(),
+  timeout: 30_000,
 })
 
-// Attach JWT to every request automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -13,16 +21,18 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle 401s globally — redirect to login
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only hard-redirect when an authenticated request was rejected (avoids wiping session on stray 401s).
+    const sentAuth =
+      error.config?.headers?.Authorization ?? error.config?.headers?.authorization
+    if (error.response?.status === 401 && sentAuth) {
       localStorage.removeItem('token')
       window.location.href = '/'
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export default api
